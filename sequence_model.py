@@ -1,5 +1,12 @@
+import numpy as np
+
+from keras import regularizers
+
+from keras.constraints import maxnorm
+from keras.layers import Dense
 from keras.models import Sequential
-from keras.regularizers import l2
+from keras.optimizers import Adam
+from keras.utils import np_utils
 
 from d3m.primitive_interfaces.base import CallResult   
 import d3m.container as container    
