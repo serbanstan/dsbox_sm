@@ -43,7 +43,7 @@ class SM_Hyperparams(hyperparams.Hyperparams):
 class SequentialModel(SupervisedLearnerPrimitiveBase[Input, Output, SM_Params, SM_Hyperparams]):
     metadata = PrimitiveMetadata({
         "schema": "v0",
-        "id": "6cc829ba74786110c636dee4c4ba92bbbd8a8d14",
+        "id": "e1c0f608a542504562fbe506c66337f04e293041",
         "version": "1.0.0",
         "name": "SequentialModel",
         "description": "Uses Sequential from Keras to do predictions with previously finely tuned hyperparams.",
