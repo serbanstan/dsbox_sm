@@ -5,8 +5,8 @@ D3M_API_VERSION = '2018.6.5'
 VERSION = "1.0.0"
 TAG_NAME = "{git_commit}".format(git_commit=utils.current_git_commit(os.path.dirname(__file__)), )
 
-REPOSITORY = "https://github.com/serbanstan/sequential_model"
-PACAKGE_NAME = "sequential-model"
+REPOSITORY = "https://github.com/serbanstan/dsbox_sm"
+PACAKGE_NAME = "dsbox_sm"
 
 D3M_PERFORMER_TEAM = 'ISI'
 

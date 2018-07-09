@@ -7,7 +7,7 @@ except IOError:
     long_description = ""
 
 setup(
-    name="sequential-model",
+    name="dsbox_sm",
     version="1.0.0",
     description="A hyperparameter optimized implementation of a Keras Sequential NN",
     license="AGPL-3.0",
@@ -15,8 +15,8 @@ setup(
     author_email="sstan@usc.edu",
     keywords='d3m_primitive',
     packages=find_packages(),
-    url='https://github.com/serbanstan/sequential-model',
-    download_url='https://github.com/serbanstan/sequential-model',
+    url='https://github.com/serbanstan/dsbox_sm',
+    download_url='https://github.com/serbanstan/dsbox_sm',
     install_requires=[],
     long_description=long_description,
     include_package_data = True,

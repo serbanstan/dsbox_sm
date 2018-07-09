@@ -51,7 +51,7 @@ class SequentialModel(SupervisedLearnerPrimitiveBase[Input, Output, SM_Params, S
         "source": {
             "name": "ISI",
             "contact": "mailto:sstan@usc.edu",
-            "uris": [ "https://github.com/serbanstan/sequential-model" ]
+            "uris": [ "https://github.com/serbanstan/dsbox_sm" ]
         },
         "installation": [ cfg_.INSTALLATION ],
         "algorithm_types": ['MULTILAYER_PERCEPTRON'],
