@@ -44,7 +44,7 @@ class SequentialModel(SupervisedLearnerPrimitiveBase[Input, Output, SM_Params, S
         "schema": "v0",
         "id": "6cc829ba74786110c636dee4c4ba92bbbd8a8d14",
         "version": "1.0.0",
-        "name": "Sequential_Model",
+        "name": "SequentialModel",
         "description": "Uses Sequential from Keras to do predictions with previously finely tuned hyperparams.",
         "python_path": "d3m.primitives.dsbox.SequentialModel",
         "original_python_path": "sequential_model.SequentialModel",
