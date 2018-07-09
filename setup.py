@@ -7,9 +7,9 @@ except IOError:
     long_description = ""
 
 setup(
-    name="sequencing_model",
+    name="sequential_model",
     version="1.0.0",
-    description="A hyperparameter optimized implementation of a Keras Sequential NN"
+    description="A hyperparameter optimized implementation of a Keras Sequential NN",
     license="AGPL-3.0",
     author="Serban Stan/Hyunjun Choi",
     author_email="sstan@usc.edu",
