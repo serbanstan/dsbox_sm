@@ -38,13 +38,13 @@ class SM_Hyperparams(hyperparams.Hyperparams):
         default = 1e-4,
         description = 'l2 regularization penalty',
         semantic_types = ['http://schema.org/Float', 'https://metadata.datadrivendiscovery.org/types/TuningParameter']
-        )
+    )
 
 class SequentialModel(SupervisedLearnerPrimitiveBase[Input, Output, SM_Params, SM_Hyperparams]):
     metadata = PrimitiveMetadata({
         "schema": "v0",
         "id": "e1c0f608a542504562fbe506c66337f04e293041",
-        "version": "1.0.0",
+        "version": "1.0.1",
         "name": "SequentialModel",
         "description": "Uses Sequential from Keras to do predictions with previously finely tuned hyperparams.",
         "python_path": "d3m.primitives.dsbox.SequentialModel",
@@ -147,7 +147,7 @@ class SequentialModel(SupervisedLearnerPrimitiveBase[Input, Output, SM_Params, S
         self._annotation.name = 'SequentialModel'
         self._annotation.task = 'Classification'
         self._annotation.learning_type = 'SupervisedLearning'
-        self._annotation.ml_algorithm = ['Classification']
+        self._annotation.ml_algorithm = ['Keras Sequential']
         self._annotation.tags = ['multilayer_perceptron']
         return self._annotation
 
