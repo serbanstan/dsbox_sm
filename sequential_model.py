@@ -140,6 +140,17 @@ class SequentialModel(SupervisedLearnerPrimitiveBase[Input, Output, SM_Params, S
     def _inverse_mapping(self, vec):
         return [self.inverse_map[x] for x in vec]
 
+    def _annotation(self):
+        if self._annotation is not None:
+            return self._annotation
+        self._annotation = Primitive()
+        self._annotation.name = 'SequentialModel'
+        self._annotation.task = 'Classification'
+        self._annotation.learning_type = 'SupervisedLearning'
+        self._annotation.ml_algorithm = ['Classification']
+        self._annotation.tags = ['multilayer_perceptron']
+        return self._annotation
+
     # code taken from http://zachmoshe.com/2017/04/03/pickling-keras-models.html
     def __getstate__(self):
         model_str = ""
@@ -155,4 +166,6 @@ class SequentialModel(SupervisedLearnerPrimitiveBase[Input, Output, SM_Params, S
             fd.flush()
             model = keras.models.load_model(fd.name)
         self.__dict__ = model.__dict__
+
+
     
