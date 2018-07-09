@@ -14,13 +14,14 @@ from d3m.metadata.hyperparams import Uniform
 from d3m.primitive_interfaces.base import CallResult
 from d3m.primitive_interfaces.supervised_learning import SupervisedLearnerPrimitiveBase
 
+import config as cfg_
+import copy
+
 import d3m.container as container
 import d3m.metadata.hyperparams as hyperparams
 import d3m.metadata.params as params
 
-import config as cfg_
-
-import copy
+import keras
 import typing
 
 Input = container.DataFrame
@@ -61,6 +62,10 @@ class SequentialModel(SupervisedLearnerPrimitiveBase[Input, Output, SM_Params, S
 
 
     def __init__(self, *, hyperparams : SM_Hyperparams) -> None:
+        cls = keras.models.Model
+        cls.__getstate__ = self.__getstate__
+        cls.__setstate__ = self.__setstate__
+
         super().__init__(hyperparams = hyperparams)
 
     def set_training_data(self, *, inputs : Input, outputs: Output) -> None:
@@ -77,7 +82,7 @@ class SequentialModel(SupervisedLearnerPrimitiveBase[Input, Output, SM_Params, S
 
         # turn data to ndarray format
         self.training_inputs = inputs.values
-        self.training_outputs = to_categorical(outputs)
+        self.training_outputs = to_categorical(self._create_mapping(outputs))
         self.fitted = False
 
 
@@ -90,24 +95,64 @@ class SequentialModel(SupervisedLearnerPrimitiveBase[Input, Output, SM_Params, S
         
         modelSub.compile(loss = self.kindOfcrossEntropy, optimizer = optimizer, metrics = ['accuracy'])
 
-        print(self.training_outputs.shape)
-        print(self.training_outputs)
-
         self.model = modelSub
         self.model.fit(self.training_inputs, self.training_outputs, validation_split = self.validateSplitRate, epochs = self.epochs, batch_size = self.batchSize)
+
+        self.fitted = True
+
         return CallResult(None, True, self.epochs)
     
     def produce(self, *, inputs : Input, timeout : float = None, iterations : int = None) -> CallResult[Output]:
-        prediction = container.DataFrame(self.model.predict_classes(inputs.values))
+        prediction = container.DataFrame(self._inverse_mapping(self.model.predict_classes(inputs.values)))
         prediction.index = copy.deepcopy(inputs.index)
 
         return CallResult(prediction, True, 0)
 
     def get_params(self) -> SM_Params:
-        return SM_Params()
+        if not self.fitted:
+            raise ValueError("Fit not performed")
+        return SM_Params(model = self.model)
 
     def set_params(self, *, params : SM_Params) -> None:
         self.model = params["model"]
-        pass
 
+    def _create_mapping(self, vec):
+        # create a mapping from type to float
+        self.mapping = dict()
+        self.inverse_map = dict()
+
+        res = []
+
+        mapping_index = 0
+        for v in vec.values.ravel():
+            if v in self.mapping:
+                res.append(self.mapping[v])
+            else:
+                mapping_index = mapping_index + 1
+
+                self.mapping[v] = mapping_index
+                self.inverse_map[mapping_index] = v
+
+                res.append(mapping_index)
+
+        return res
+
+    def _inverse_mapping(self, vec):
+        return [self.inverse_map[x] for x in vec]
+
+    # code taken from http://zachmoshe.com/2017/04/03/pickling-keras-models.html
+    def __getstate__(self):
+        model_str = ""
+        with tempfile.NamedTemporaryFile(suffix='.hdf5', delete=True) as fd:
+            keras.models.save_model(self, fd.name, overwrite=True)
+            model_str = fd.read()
+        d = { 'model_str': model_str }
+        return d
+
+    def __setstate__(self, state):
+        with tempfile.NamedTemporaryFile(suffix='.hdf5', delete=True) as fd:
+            fd.write(state['model_str'])
+            fd.flush()
+            model = keras.models.load_model(fd.name)
+        self.__dict__ = model.__dict__
     
