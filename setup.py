@@ -8,7 +8,7 @@ except IOError:
 
 setup(
     name="dsbox_sm",
-    version="1.0.1",
+    version="1.0.2",
     description="A hyperparameter optimized implementation of a Keras Sequential NN",
     license="AGPL-3.0",
     author="Serban Stan/Hyunjun Choi",
