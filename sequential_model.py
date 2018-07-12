@@ -22,6 +22,7 @@ import d3m.metadata.hyperparams as hyperparams
 import d3m.metadata.params as params
 
 import keras
+import tempfile
 import typing
 
 Input = container.DataFrame
@@ -29,7 +30,7 @@ Output = container.DataFrame
 
 class SM_Params(params.Params):
     model_: typing.Union[Sequential, None]
-    inverse_map_: typing.Union[Dict, None]
+    inverse_map_: typing.Union[typing.Dict[typing.Any, typing.Any], None]
 
 class SM_Hyperparams(hyperparams.Hyperparams):
     reg_val = Uniform(
@@ -63,10 +64,6 @@ class SequentialModel(SupervisedLearnerPrimitiveBase[Input, Output, SM_Params, S
 
 
     def __init__(self, *, hyperparams : SM_Hyperparams) -> None:
-        cls = keras.models.Model
-        cls.__getstate__ = self.__getstate__
-        cls.__setstate__ = self.__setstate__
-
         super().__init__(hyperparams = hyperparams)
 
     def set_training_data(self, *, inputs : Input, outputs: Output) -> None:
@@ -104,7 +101,7 @@ class SequentialModel(SupervisedLearnerPrimitiveBase[Input, Output, SM_Params, S
         return CallResult(None, True, self.epochs)
     
     def produce(self, *, inputs : Input, timeout : float = None, iterations : int = None) -> CallResult[Output]:
-        prediction = container.DataFrame(inverse_mapping(self.model.predict_classes(inputs.values)))
+        prediction = container.DataFrame(self._inverse_mapping(self.model.predict_classes(inputs.values)))
         prediction.index = copy.deepcopy(inputs.index)
 
         return CallResult(prediction, True, 0)
@@ -142,8 +139,6 @@ class SequentialModel(SupervisedLearnerPrimitiveBase[Input, Output, SM_Params, S
         self.model = params["model_"]
         self.inverse_map = params["inverse_map_"]
 
-    
-
     def _annotation(self):
         if self._annotation is not None:
             return self._annotation
@@ -155,21 +150,7 @@ class SequentialModel(SupervisedLearnerPrimitiveBase[Input, Output, SM_Params, S
         self._annotation.tags = ['multilayer_perceptron']
         return self._annotation
 
-    # code taken from http://zachmoshe.com/2017/04/03/pickling-keras-models.html
-    def __getstate__(self):
-        model_str = ""
-        with tempfile.NamedTemporaryFile(suffix='.hdf5', delete=True) as fd:
-            keras.models.save_model(self, fd.name, overwrite=True)
-            model_str = fd.read()
-        d = { 'model_str': model_str }
-        return d
 
-    def __setstate__(self, state):
-        with tempfile.NamedTemporaryFile(suffix='.hdf5', delete=True) as fd:
-            fd.write(state['model_str'])
-            fd.flush()
-            model = keras.models.load_model(fd.name)
-        self.__dict__ = model.__dict__
 
 
     
