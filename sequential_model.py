@@ -28,7 +28,8 @@ Input = container.DataFrame
 Output = container.DataFrame
 
 class SM_Params(params.Params):
-    model: typing.Union[Sequential, None]
+    model_: typing.Union[Sequential, None]
+    inverse_map_: typing.Union[Dict, None]
 
 class SM_Hyperparams(hyperparams.Hyperparams):
     reg_val = Uniform(
@@ -103,18 +104,10 @@ class SequentialModel(SupervisedLearnerPrimitiveBase[Input, Output, SM_Params, S
         return CallResult(None, True, self.epochs)
     
     def produce(self, *, inputs : Input, timeout : float = None, iterations : int = None) -> CallResult[Output]:
-        prediction = container.DataFrame(self._inverse_mapping(self.model.predict_classes(inputs.values)))
+        prediction = container.DataFrame(inverse_mapping(self.model.predict_classes(inputs.values)))
         prediction.index = copy.deepcopy(inputs.index)
 
         return CallResult(prediction, True, 0)
-
-    def get_params(self) -> SM_Params:
-        if not self.fitted:
-            raise ValueError("Fit not performed")
-        return SM_Params(model = self.model)
-
-    def set_params(self, *, params : SM_Params) -> None:
-        self.model = params["model"]
 
     def _create_mapping(self, vec):
         # create a mapping from type to float
@@ -139,6 +132,17 @@ class SequentialModel(SupervisedLearnerPrimitiveBase[Input, Output, SM_Params, S
 
     def _inverse_mapping(self, vec):
         return [self.inverse_map[x] for x in vec]
+
+    def get_params(self) -> SM_Params:
+        if not self.fitted:
+            raise ValueError("Fit not performed")
+        return SM_Params(model_ = self.model, inverse_map_ = self.inverse_map)
+
+    def set_params(self, *, params : SM_Params) -> None:
+        self.model = params["model_"]
+        self.inverse_map = params["inverse_map_"]
+
+    
 
     def _annotation(self):
         if self._annotation is not None:
