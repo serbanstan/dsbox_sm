@@ -45,7 +45,7 @@ class SM_Hyperparams(hyperparams.Hyperparams):
 class SequentialModel(SupervisedLearnerPrimitiveBase[Input, Output, SM_Params, SM_Hyperparams]):
     metadata = PrimitiveMetadata({
         "schema": "v0",
-        "id": "e1c0f608a542504562fbe506c66337f04e293041",
+        "id": "4d6cbfca-5ac4-4e92-a3de-dc4a47008649",
         "version": "1.0.2",
         "name": "SequentialModel",
         "description": "Uses Sequential from Keras to do predictions with previously finely tuned hyperparams.",
@@ -98,13 +98,16 @@ class SequentialModel(SupervisedLearnerPrimitiveBase[Input, Output, SM_Params, S
 
         self.fitted = True
 
-        return CallResult(None, True, self.epochs)
+        return CallResult(None, True, 1)
     
     def produce(self, *, inputs : Input, timeout : float = None, iterations : int = None) -> CallResult[Output]:
+        if not self.fitted:
+            return CallResult(inputs, True, 1)
+
         prediction = container.DataFrame(self._inverse_mapping(self.model.predict_classes(inputs.values)))
         prediction.index = copy.deepcopy(inputs.index)
 
-        return CallResult(prediction, True, 0)
+        return CallResult(prediction, True, 1)
 
     def _create_mapping(self, vec):
         # create a mapping from type to float
