@@ -4,6 +4,7 @@ from keras import regularizers
 
 from keras.constraints import maxnorm
 from keras.layers import Dense
+from keras.layers import Input as InputK
 from keras.models import Sequential
 from keras.optimizers import Adam
 from keras.utils import to_categorical
@@ -30,6 +31,7 @@ Output = container.DataFrame
 
 class SM_Params(params.Params):
     model_: typing.Union[Sequential, None]
+    #model_: typing.Union[keras.models.Model, None]
     inverse_map_: typing.Union[typing.Dict[typing.Any, typing.Any], None]
 
 class SM_Hyperparams(hyperparams.Hyperparams):
@@ -41,6 +43,32 @@ class SM_Hyperparams(hyperparams.Hyperparams):
         description = 'l2 regularization penalty',
         semantic_types = ['http://schema.org/Float', 'https://metadata.datadrivendiscovery.org/types/TuningParameter']
     )
+
+
+def make_keras_picklable():
+    def __getstate__(self):
+        model_str = ""
+        with tempfile.NamedTemporaryFile(suffix='.hdf5', delete=True) as fd:
+            keras.models.save_model(self, fd.name, overwrite=True)
+            model_str = fd.read()
+        d = { 'model_str': model_str }
+        return d
+
+    def __setstate__(self, state):
+        with tempfile.NamedTemporaryFile(suffix='.hdf5', delete=True) as fd:
+            fd.write(state['model_str'])
+            fd.flush()
+            model = keras.models.load_model(fd.name)
+        self.__dict__ = model.__dict__
+
+
+    cls = Sequential
+    cls.__getstate__ = __getstate__
+    cls.__setstate__ = __setstate__
+
+    cls = keras.models.Model
+    cls.__getstate__ = __getstate__
+    cls.__setstate__ = __setstate__
 
 class SequentialModel(SupervisedLearnerPrimitiveBase[Input, Output, SM_Params, SM_Hyperparams]):
     metadata = PrimitiveMetadata({
@@ -85,12 +113,18 @@ class SequentialModel(SupervisedLearnerPrimitiveBase[Input, Output, SM_Params, S
 
 
     def fit(self) -> CallResult[None]:
+        make_keras_picklable()
+
         modelSub = Sequential()
-        
         modelSub.add(Dense(100, input_dim = self.inputDim, kernel_regularizer = regularizers.l2(self.hyperparams['reg_val']), activation = 'tanh', kernel_constraint = maxnorm(2)))
         modelSub.add(Dense(self.training_outputs.shape[1], kernel_regularizer = regularizers.l2(self.hyperparams['reg_val']), activation = 'sigmoid'))
+        
+        #inp = InputK(shape = (self.inputDim,))
+        #x = Dense(100, kernel_regularizer = regularizers.l2(self.hyperparams['reg_val']), activation = 'tanh', kernel_constraint = maxnorm(2))(inp)
+        #x = Dense(self.training_outputs.shape[1], kernel_regularizer = regularizers.l2(self.hyperparams['reg_val']), activation = 'sigmoid')(x)
         optimizer = Adam(lr = 0.001)
         
+        #modelSub = keras.models.Model(inputs = inp, outputs = x)
         modelSub.compile(loss = self.kindOfcrossEntropy, optimizer = optimizer, metrics = ['accuracy'])
 
         self.model = modelSub
@@ -142,6 +176,7 @@ class SequentialModel(SupervisedLearnerPrimitiveBase[Input, Output, SM_Params, S
         self.model = params["model_"]
         self.inverse_map = params["inverse_map_"]
 
+
     def _annotation(self):
         if self._annotation is not None:
             return self._annotation
@@ -152,8 +187,3 @@ class SequentialModel(SupervisedLearnerPrimitiveBase[Input, Output, SM_Params, S
         self._annotation.ml_algorithm = ['Keras Sequential']
         self._annotation.tags = ['multilayer_perceptron']
         return self._annotation
-
-
-
-
-    
